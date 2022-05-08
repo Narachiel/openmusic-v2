@@ -19,7 +19,7 @@ exports.up = (pgm) => {
     updated_at: {
       type: 'TIMESTAMP',
       notNull: true,
-    }, 
+    },
   });
 };
 
