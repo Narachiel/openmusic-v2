@@ -2,3 +2,4 @@ node_modules
 openmusic-api-web-server.pem
 .env
 .prod.env
+package-lock.json
