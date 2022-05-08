@@ -14,6 +14,7 @@ const mapDBToSongModel = ({
   owner,
   playlist_id,
   user_id,
+  cover,
 }) => ({
   id,
   title,
@@ -30,6 +31,7 @@ const mapDBToSongModel = ({
   owner,
   playlistId: playlist_id,
   userId: user_id,
+  coverUrl: cover,
 });
 
 module.exports = { mapDBToSongModel };

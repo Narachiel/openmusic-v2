@@ -56,9 +56,7 @@ class PlaylistService {
   async addSongPlaylist({ playlistId, songId }) {
     const querycekSong = {
       text: 'SELECT title FROM songs WHERE id = $1',
-      values: [
-        songId,
-      ],
+      values: [songId],
     };
     const Song = await this._pool.query(querycekSong);
 
@@ -69,11 +67,7 @@ class PlaylistService {
 
     const query = {
       text: 'INSERT INTO playlist_songs VALUES($1, $2, $3) RETURNING id',
-      values: [
-        id,
-        playlistId,
-        songId,
-      ],
+      values: [id, playlistId, songId],
     };
 
     const result = await this._pool.query(query);
@@ -190,6 +184,19 @@ class PlaylistService {
     };
     const result = await this._pool.query(query);
     return result.rows;
+  }
+
+  async checkPlaylistAvailability(id) {
+    const query = {
+      text: 'SELECT id FROM playlists WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Playlist tidak ditemukan');
+    }
   }
 }
 

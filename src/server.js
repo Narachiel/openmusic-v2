@@ -1,6 +1,8 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const path = require('path');
 const ClientError = require('./exceptions/ClientError');
 
 // albums
@@ -34,6 +36,22 @@ const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/collaborations/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations/index');
 
+// exports
+const _exports = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
+// uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService/StorageService');
+const UploadsValidator = require('./validator/uploads');
+
+// useralbumlikes
+const UserAlbumLikesService = require('./services/postgres/useralbumlikes/UserAlbumsLikesService');
+
+// Redis
+const CacheService = require('./services/redis/CacheService/CacheService');
+
 const init = async () => {
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService();
@@ -41,6 +59,11 @@ const init = async () => {
   const songsService = new SongsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
+  const storageService = new StorageService(
+    path.resolve(__dirname, 'api/uploads/file/images'),
+  );
+  const cacheService = new CacheService();
+  const userAlbumLikesService = new UserAlbumLikesService(cacheService);
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -53,9 +76,14 @@ const init = async () => {
   });
 
   // registrasi plugin eksternal
-  await server.register([{
-    plugin: Jwt,
-  }]);
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+    {
+      plugin: Inert,
+    },
+  ]);
 
   // mendefinisikan strategy authentikasi jwt
   server.auth.strategy('openmusicapp_jwt', 'jwt', {
@@ -79,6 +107,7 @@ const init = async () => {
       plugin: albums,
       options: {
         service: albumsService,
+        userAlbumLikesService,
         validator: AlbumsValidator,
       },
     },
@@ -120,6 +149,22 @@ const init = async () => {
         collaborationsService,
         playlistsService,
         validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        service: ProducerService,
+        playlistsService,
+        validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        service: storageService,
+        albumsService,
+        validator: UploadsValidator,
       },
     },
   ]);

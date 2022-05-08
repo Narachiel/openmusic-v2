@@ -9,10 +9,7 @@ class AlbumsService {
     this._pool = new Pool();
   }
 
-  async addAlbum({
-    name,
-    year,
-  }) {
+  async addAlbum({ name, year }) {
     const id = `album-${nanoid(16)}`;
     const createdAt = new Date().toISOString();
 
@@ -72,10 +69,7 @@ class AlbumsService {
     return album.rows.map(mapDBToSongModel)[0];
   }
 
-  async editAlbumById(id, {
-    name,
-    year,
-  }) {
+  async editAlbumById(id, { name, year }) {
     const updatedAt = new Date().toISOString();
 
     const query = {
@@ -100,6 +94,34 @@ class AlbumsService {
 
     if (!result.rows.length) {
       throw new NotFoundError(`Album dengan id ${id} tidak ditemukan.`);
+    }
+  }
+
+  async addAlbumImage(id, file) {
+    const query = {
+      text: 'UPDATE albums SET cover = $1 WHERE id = $2 RETURNING id',
+      values: [file, id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows[0].id) {
+      throw new InvariantError('Cover gagal diunggah');
+    }
+
+    return result.rows[0].id;
+  }
+
+  async verifyExistingAlbumById(id) {
+    const query = {
+      text: 'SELECT id FROM albums WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Album tidak ditemukan');
     }
   }
 }
