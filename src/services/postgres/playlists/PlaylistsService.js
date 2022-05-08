@@ -156,7 +156,7 @@ class PlaylistService {
     }
   }
 
-  /* async checkUserAvailability(userId) {
+  async checkUserAvailability(userId) {
     const query = {
       text: 'SELECT * FROM users WHERE id = $1',
       values: [userId],
@@ -166,7 +166,7 @@ class PlaylistService {
     if (!result.rows.length) {
       throw new NotFoundError('User tidak ditemukan');
     }
-  } */
+  }
 
   async verifyPlaylistAccess(playlistId, userId) {
     try {
