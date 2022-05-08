@@ -22,4 +22,4 @@ class StorageService {
   }
 }
 
-module.exports = StorageService
+module.exports = StorageService;
