@@ -111,6 +111,19 @@ class AlbumsService {
 
     return result.rows[0].id;
   }
+
+  async verifyExistingAlbumById(id) {
+    const query = {
+      text: 'SELECT id FROM albums WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Album tidak ditemukan');
+    }
+  }
 }
 
 module.exports = AlbumsService;

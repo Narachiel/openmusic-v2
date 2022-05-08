@@ -1,14 +1,17 @@
 const ClientError = require('../../exceptions/ClientError');
 
 class AlbumsHandler {
-  constructor(service, validator) {
+  constructor(service, userAlbumLikesService, validator) {
     this._service = service;
+    this._userAlbumLikesService = userAlbumLikesService;
     this._validator = validator;
 
     this.postAlbumHandler = this.postAlbumHandler.bind(this);
     this.getAlbumByIdHandler = this.getAlbumByIdHandler.bind(this);
     this.putAlbumByIdHandler = this.putAlbumByIdHandler.bind(this);
     this.deleteAlbumByIdHandler = this.deleteAlbumByIdHandler.bind(this);
+    this.postUserAlbumLikeHandler = this.postUserAlbumLikeHandler.bind(this);
+    this.getUserAlbumLikeByAlbumIdHandler = this.getUserAlbumLikeByAlbumIdHandler.bind(this);
   }
 
   async postAlbumHandler(request, h) {
@@ -140,6 +143,60 @@ class AlbumsHandler {
       console.error(error);
       return response;
     }
+  }
+
+  async postUserAlbumLikeHandler(request, h) {
+    const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._service.verifyExistingAlbumById(id);
+
+    const isLiked = await this._userAlbumLikesService.verifyUserAlbumLike(
+      credentialId,
+      id,
+    );
+
+    if (!isLiked) {
+      await this._userAlbumLikesService.addUserAlbumLikes(credentialId, id);
+
+      const response = h.response({
+        status: 'success',
+        message: 'Album berhasil disukai',
+      });
+
+      response.code(201);
+
+      return response;
+    }
+
+    await this._userAlbumLikesService.deleteUserAlbumLikes(credentialId, id);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Batal menyukai album berhasil',
+    });
+
+    response.code(201);
+
+    return response;
+  }
+
+  async getUserAlbumLikeByAlbumIdHandler(request, h) {
+    const { id } = request.params;
+    const { number, source } = await this._userAlbumLikesService.getUserAlbumLikeByAlbumId(id);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        likes: number,
+      },
+    });
+
+    response.header('X-Data-Source', source);
+
+    response.code(200);
+
+    return response;
   }
 }
 
